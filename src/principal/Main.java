@@ -1,7 +1,6 @@
 package principal;
 
 
-
 /*IMPLEMENTAÇÃO DO CANAL SEGURO
  * -ENCRIPTAÇÃO  --¬
  * -AUTENTICAÇÃO ---> CRIPTOGRAFIA SIMÉTRICA
@@ -13,7 +12,12 @@ public class Main {
 
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
+		
+		
+		
 
 	}
+		
 
 }
+
