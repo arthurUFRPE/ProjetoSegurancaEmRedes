@@ -14,27 +14,28 @@ public class RSA {
 
 	public static final String ALGORITHM = "RSA";
 
-	public static void gerarChave() {
+	public KeyPair gerarChave() {
 		try {
 			final KeyPairGenerator keyGen = KeyPairGenerator.getInstance(ALGORITHM);
 			keyGen.initialize(1024);
 
 			final KeyPair key = keyGen.generateKeyPair();
-
+			return key;
 		} catch (Exception e) {
-			// TODO: handle exception
+			e.printStackTrace();
+			return null;
 		}
 
 	}
 
-	public static byte[] criptografa(String texto, PublicKey chave) {
+	public byte[] criptografa(byte[] texto, PublicKey chave) {
 		byte[] cipherText = null;
 
 		try {
 			final Cipher cipher = Cipher.getInstance(ALGORITHM);
 			// Criptografa o texto puro usando a chave Púlica
 			cipher.init(Cipher.ENCRYPT_MODE, chave);
-			cipherText = cipher.doFinal(texto.getBytes());
+			cipherText = cipher.doFinal(texto);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
