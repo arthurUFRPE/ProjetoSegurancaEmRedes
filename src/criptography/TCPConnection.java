@@ -6,136 +6,156 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.security.PublicKey;
+
+import object.AESPackage;
 
 public class TCPConnection {
 
-	private Socket socket;
 	private CriptographyManager manager;
-	BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
-	Socket clientSocket;
 	ServerSocket welcomeSocket;
+	Socket connectionSocket;
+	public static final int SERVER_MODE = 0;
+	public static final int CLIENT_MODE = 1;
 	
-	public void initServer(int port) {
+	public TCPConnection(int mode, int port, String host){
+		switch (mode) {
+		case SERVER_MODE:
+				initServer(port);
+		case CLIENT_MODE:
+				initClient(host, port);
+		}
+	}
+	
+	private TCPConnection initServer(int port) {
 		manager = new CriptographyManager();
-		BufferedReader inFromClient;
-		DataOutputStream outToClient;
-		
+		manager.setPrivateKey(manager.readPrivateKey());
 		try {
-			
-			System.out.println("Estabelecendo Conexão...");
 			welcomeSocket =  new ServerSocket(port);
-			Socket connectionSocket = welcomeSocket.accept();
-	        inFromClient = new BufferedReader(new InputStreamReader(connectionSocket.getInputStream()));
-	        outToClient = new DataOutputStream(connectionSocket.getOutputStream());
-	        
-	        System.out.println("Trocando chaves...");
-	        
-	        while(manager.getPublicKey() == null){
-	        	
-				String publicKey = inFromClient.readLine();
-				Object object = manager.decryptToRead(publicKey);
-				if(object instanceof PublicKey){
-	        		manager.setPublicKey((PublicKey) object);
-	        		
-	        		manager.setAes(new AES());
-	        		manager.getAes().gerarChave();
-	        		
-	        		outToClient.write(manager.encryptToSend(manager.getAes(), manager.ASYNCHRONOUS_MODE));
-	        	}else{
-	        		outToClient.writeBytes("Send PublicKey");
-	        	}
-			}
-	        
-	        System.out.println("Iniciando Conversa...");
-	        
-	        new ReceiverServer().run();
-	        
+			connectionSocket = welcomeSocket.accept();
+			
+			new ConnectionServer(connectionSocket, manager).run();
+			System.out.println("SERVER MODE START!");
+			return this;
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		return null;
 		
-		
-		
-
 	}
 
-	public void initClient(String host, int port) {
-		
+	private TCPConnection initClient(String host, int port) {
+		manager = new CriptographyManager();
+		manager.setPublicKey(manager.readPublicKey());
 		try {
-			System.out.println("Estabelecendo Conexão...");
-			clientSocket = new Socket(host, port);
-	        DataOutputStream outToServer = new DataOutputStream(clientSocket.getOutputStream());
-	        BufferedReader inFromServer = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+			connectionSocket = new Socket(host, port);
+	        DataOutputStream outToServer = new DataOutputStream(connectionSocket.getOutputStream());
 	        
-	        System.out.println("Trocando chaves...");
+	        AESPackage aesPackage = new AESPackage(manager.getAes(true).getKeySend());	        
 	        
-	        manager.generateKeyPair();
-	        outToServer.writeBytes(manager.getPublicKey());
+	        outToServer.writeUTF(manager.encryptToSend(aesPackage, CriptographyManager.ASYNCHRONOUS_MODE));
 	        
-	        while(manager.getAes() == null){
-	        	String modifiedSentence = inFromServer.readLine();
-	        	Object object = manager.decryptToRead(modifiedSentence);
-	        	if(object instanceof AES){
-	        		manager.setAes((AES) object);
-	        	}else{
-	        		if(object instanceof String){
-	        			String msg = (String) object;
-	        			if(msg.equals("Send PublicKey")){
-	        				outToServer.writeBytes(manager.getPublicKey());
-	        			}
-	        		}
-	        	}
-	        }
-	        
-	        System.out.println("Iniciando Conversa...");
-	        new ReceiverClient().run();
-	        
-	        
-	        
-	        
+	        new ConnectionClient(connectionSocket,manager).run();
+
+			System.out.println("CLIENT MODE START!");
+	        return this;        
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+		return null;
 
 	}
 	
 	public void closeConnection(){
 		
         try {
-        	System.out.println("Fim da conversa!");
-			clientSocket.close();
+        	System.out.println("End!");
+        	connectionSocket.close();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
 
-	public void sendToServer(Object o) {
-
-	}
-
-	public void sendToClient(Object o) {
-
+	public void send(Object o) {
+		try {
+			DataOutputStream outTo = new DataOutputStream(connectionSocket.getOutputStream());
+			
+			outTo.writeUTF(manager.encryptToSend(o, CriptographyManager.SYNCHRONOUS_MODE));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 }
 
-class ReceiverClient implements Runnable{
+class ConnectionClient implements Runnable{
+	
+	Socket connectionSocket;
+	BufferedReader inFromServer;
+	CriptographyManager manager;
+	
+	public ConnectionClient(Socket connectionSocket, CriptographyManager manager) {
+		super();
+		this.connectionSocket = connectionSocket;
+		this.manager = manager;
+	}
 
 	@Override
 	public void run() {
-		// TODO Auto-generated method stub
+        try {
+			inFromServer = new BufferedReader(new InputStreamReader(connectionSocket.getInputStream()));
+			
+//			while(true){
+//				//Ler Mensagens AQUI!!
+//			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		
 	}
 	
 }
 
-class ReceiverServer implements Runnable{
+class ConnectionServer implements Runnable{
+	
+	Socket connectionSocket;
+	BufferedReader inFromClient;
+	DataOutputStream outToClient;
+	CriptographyManager manager;
+	
 
+	public ConnectionServer(Socket connectionSocket, CriptographyManager manager) {
+		super();
+		this.connectionSocket = connectionSocket;
+		this.manager = manager;
+	}
+	
 	@Override
 	public void run() {
-		// TODO Auto-generated method stub
+        try {
+        	inFromClient = new BufferedReader(new InputStreamReader(connectionSocket.getInputStream()));
+			outToClient = new DataOutputStream(connectionSocket.getOutputStream());
+			
+			while(manager.getAes(false) == null){
+	        	String msg = inFromClient.readLine();
+	        	Object obj = manager.decryptToRead(msg, CriptographyManager.ASYNCHRONOUS_MODE);
+	        	if(obj instanceof AESPackage){
+	        		manager.getAes(true).setKey(((AESPackage) obj).getKey());
+	        		//manager.setMacKey(((CriptographyManager) obj).getMacKey());
+	        	}
+	        }
+			System.out.println("FOI!!!!");
+//			while(true){
+//				//Ler Mensagens AQUI!!
+//			}
+			
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+        
+        
 		
 	}
 	

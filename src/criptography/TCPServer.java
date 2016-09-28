@@ -8,7 +8,7 @@ public class TCPServer {
         String clientSentence;
         String capitalizedSentence;
         ServerSocket welcomeSocket = new ServerSocket(6789);
-        Pessoa pessoaServer = new Pessoa(); //Obj da classe desejada
+//        Pessoa pessoaServer = new Pessoa(); //Obj da classe desejada
         
         System.out.println("SERVER: ");
 
@@ -18,7 +18,7 @@ public class TCPServer {
             DataOutputStream outToClient = new DataOutputStream(connectionSocket.getOutputStream());
             clientSentence = inFromClient.readLine();
             //capitalizedSentence = clientSentence.toUpperCase() + '\n';
-            outToClient.writeBytes(pessoaServer.convertFromString(clientSentence).toString() + "\n");
+//            outToClient.writeBytes(pessoaServer.convertFromString(clientSentence).toString() + "\n");
             System.out.println(clientSentence);
         }
     }

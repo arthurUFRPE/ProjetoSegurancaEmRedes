@@ -15,19 +15,19 @@ public class TCPClient {
         
         System.out.print("CLIENT: ");
 
-        //sentence = inFromUser.readLine();
-        
-        //Obj da classe desejada
-        Pessoa minhaPessoa = new Pessoa("paulinely", "masc", 27);
-        
-        sentence = minhaPessoa.convertToString();
-        outToServer.writeBytes(sentence + "\n");
-        
-        //Para ler do servidor (resposta)
-        modifiedSentence = inFromServer.readLine();
-        
-        //Para imprimir resposta no cliente
-        System.out.println(modifiedSentence);
-        clientSocket.close();
+//        //sentence = inFromUser.readLine();
+//        
+//        //Obj da classe desejada
+//        Pessoa minhaPessoa = new Pessoa("paulinely", "masc", 27);
+//        
+//        sentence = minhaPessoa.convertToString();
+//        outToServer.writeBytes(sentence + "\n");
+//        
+//        //Para ler do servidor (resposta)
+//        modifiedSentence = inFromServer.readLine();
+//        
+//        //Para imprimir resposta no cliente
+//        System.out.println(modifiedSentence);
+//        clientSocket.close();
     }
 }

@@ -2,14 +2,13 @@ package criptography;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
-
-import com.sun.corba.se.impl.oa.poa.ActiveObjectMap.Key;
 import com.sun.org.apache.xerces.internal.impl.dv.util.Base64;
 
 public class CriptographyManager {
@@ -17,22 +16,23 @@ public class CriptographyManager {
 	private PrivateKey privateKey;
 	private PublicKey publicKey;
 	private AES aes;
+	private String macKey;
 	
 	public static final int ASYNCHRONOUS_MODE = 0;
 	public static final int SYNCHRONOUS_MODE = 1;
 	
 	
-	public byte[] encryptToSend(Object o, int mode){
+	public String encryptToSend(Object o, int mode){
 		
-		byte[] byteObject = convertToString(o);
-		byte[] encr = null;
+		String msg = convertToString(o);
+		String encr = null;
 		switch (mode) {
 		case ASYNCHRONOUS_MODE:
-			encr = new RSA().criptografa(byteObject, publicKey);
+			encr = new RSA().criptografa(msg, publicKey);
 			break;
 		case SYNCHRONOUS_MODE:
 			try {
-				encr = aes.encrypt(byteObject);
+				encr = Base64.encode(aes.encrypt(Base64.decode(msg)));
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -45,15 +45,29 @@ public class CriptographyManager {
 		
 	}
 	
-	public Object decryptToRead(String message){
+	public Object decryptToRead(String msg, int mode){
 		
-		Object object = null;
-		object = convertFromString(message);		
-		return object;
+		byte[] temp = null;
+		switch (mode) {
+		case ASYNCHRONOUS_MODE:
+			temp = new RSA().decriptografa(msg, privateKey);
+			break;
+		case SYNCHRONOUS_MODE:
+			try {
+				temp = aes.decrypt(Base64.decode(msg));
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			break;
+		default:
+			return null;
+		}
+		
+		return convertFromByte(temp);
 	}
 	
 	
-	private static byte[] convertToString(Object o) {
+	private static String convertToString(Object o) {
 		try {
 			String str;
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -62,16 +76,16 @@ public class CriptographyManager {
 			byte[] objeto = baos.toByteArray();
 			str = Base64.encode(objeto);
 			oos.close();
-			return str.getBytes("UTF-8");
+			return str;
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 		return null;
 	}
 	
-	private static Object convertFromString(String str) {
+	private static Object convertFromByte(byte[] str) {
 		try {
-			ByteArrayInputStream bais = new ByteArrayInputStream(Base64.decode(str));
+			ByteArrayInputStream bais = new ByteArrayInputStream(str);
 			ObjectInputStream ois = new ObjectInputStream(bais);
 			return ois.readObject();
 		} catch (IOException e) {
@@ -83,31 +97,63 @@ public class CriptographyManager {
 		
 	}
 	
-	public void generateKeyPair(){
-		KeyPair key = new RSA().gerarChave();
-		
-		setPrivateKey(key.getPrivate());
-		setPublicKey(key.getPublic());
+	@SuppressWarnings("resource")
+	public PrivateKey readPrivateKey(){
+		ObjectInputStream inputStream;
+		try {
+			inputStream = new ObjectInputStream(new FileInputStream("private.key"));
+	        PrivateKey chavePrivada = (PrivateKey) inputStream.readObject();
+			return chavePrivada;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return null;	
+			
 	}
 	
-	
+	@SuppressWarnings("resource")
+	public PublicKey readPublicKey(){
+		
+		ObjectInputStream inputStream;
+		try {
+			inputStream = new ObjectInputStream(new FileInputStream("public.key"));
+	        PublicKey chavePublica = (PublicKey) inputStream.readObject();
+			return chavePublica;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return null;		
+	}
+		
 	public PrivateKey getPrivateKey() {
 		return privateKey;
 	}
 	public void setPrivateKey(PrivateKey privateKey) {
 		this.privateKey = privateKey;
 	}
-	public String getPublicKey() {
-		return Base64.encode(convertToString(publicKey));
+	public PublicKey getPublicKey() {
+		return publicKey;
 	}
 	public void setPublicKey(PublicKey publicKey) {
 		this.publicKey = publicKey;
 	}
-	public AES getAes() {
+	public AES getAes(boolean generateAES) {
+		if(aes == null && generateAES)
+			aes = new AES().gerarChave();
 		return aes;
 	}
+
 	public void setAes(AES aes) {
 		this.aes = aes;
 	}
+
+	public String getMacKey() {
+		return macKey;
+	}
+
+	public void setMacKey(String macKey) {
+		this.macKey = macKey;
+	}
+	
 
 }

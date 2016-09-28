@@ -1,5 +1,6 @@
 package criptography;
 
+import java.io.Serializable;
 import java.security.NoSuchAlgorithmException;
 
 import javax.crypto.KeyGenerator;
@@ -15,16 +16,28 @@ import org.bouncycastle.crypto.params.KeyParameter;
 
 import com.sun.org.apache.xerces.internal.impl.dv.util.Base64;
 
-public class AES {
+public class AES{
 
 	private final BlockCipher AESCipher = new AESEngine();
 
 	private PaddedBufferedBlockCipher pbbc;
 	private KeyParameter key;
+	private byte[] keySend;
 
 	public void setPadding(BlockCipherPadding bcp) {
 		this.pbbc = new PaddedBufferedBlockCipher(AESCipher, bcp);
 	}
+	
+
+	public byte[] getKeySend() {
+		return keySend;
+	}
+
+	public void setKeySend(byte[] keySend) {
+		this.keySend = keySend;
+	}
+
+
 
 	public void setKey(byte[] key) {
 		this.key = new KeyParameter(key);
@@ -62,6 +75,7 @@ public class AES {
 
 			AES abc = new AES();
 			abc.setPadding(new PKCS7Padding());
+			keySend = sk.getEncoded();
 			abc.setKey(sk.getEncoded());
 
 			return abc;
