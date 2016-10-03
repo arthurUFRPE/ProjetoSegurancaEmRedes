@@ -7,8 +7,14 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.UnsupportedEncodingException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+
+import javax.crypto.SecretKey;
+
 import com.sun.org.apache.xerces.internal.impl.dv.util.Base64;
 
 public class CriptographyManager {
@@ -16,7 +22,7 @@ public class CriptographyManager {
 	private PrivateKey privateKey;
 	private PublicKey publicKey;
 	private AES aes;
-	private String macKey;
+	private byte[] macKey;
 	
 	public static final int ASYNCHRONOUS_MODE = 0;
 	public static final int SYNCHRONOUS_MODE = 1;
@@ -97,6 +103,35 @@ public class CriptographyManager {
 		
 	}
 	
+	public byte[] criptografaMAC(byte[] key, Object o){
+		String msg = convertToString(o);
+		
+		SecretKey keyMac = (SecretKey) convertFromByte(key);
+		
+		try {
+			return new RSA().retornaMAC(msg, keyMac);
+		} catch (InvalidKeyException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (NoSuchAlgorithmException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return null;
+	}
+	
+	public boolean verificaMAC(byte[] key, Object textoPleno, byte[] textoMac){
+		String msg = convertToString(textoPleno);
+		
+		SecretKey keyMac = (SecretKey) convertFromByte(key);
+		
+		return new RSA().verificaMAC(msg, keyMac, textoMac);
+	}
+	
 	@SuppressWarnings("resource")
 	public PrivateKey readPrivateKey(){
 		ObjectInputStream inputStream;
@@ -119,6 +154,20 @@ public class CriptographyManager {
 			inputStream = new ObjectInputStream(new FileInputStream("public.key"));
 	        PublicKey chavePublica = (PublicKey) inputStream.readObject();
 			return chavePublica;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return null;		
+	}
+	
+	@SuppressWarnings("resource")
+	public SecretKey readAuticationKey(){
+		
+		ObjectInputStream inputStream;
+		try {
+			inputStream = new ObjectInputStream(new FileInputStream("Autenticacao.key"));
+	        SecretKey chaveAutenticacao = (SecretKey) inputStream.readObject();
+			return chaveAutenticacao;
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -147,11 +196,11 @@ public class CriptographyManager {
 		this.aes = aes;
 	}
 
-	public String getMacKey() {
+	public byte[] getMacKey() {
 		return macKey;
 	}
 
-	public void setMacKey(String macKey) {
+	public void setMacKey(byte[] macKey) {
 		this.macKey = macKey;
 	}
 	
