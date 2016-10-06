@@ -117,18 +117,18 @@ public class RSA {
 	
 	//metodo que rertorna o mac(byte array)
 	
-	public byte[] retornaMAC(String mensagem, SecretKey chave) throws NoSuchAlgorithmException, InvalidKeyException, UnsupportedEncodingException{
+	public byte[] retornaMAC(byte[] mensagem, SecretKey chave) throws NoSuchAlgorithmException, InvalidKeyException, UnsupportedEncodingException{
 
 	    SecretKey key = chave;
 
 	    Mac mac = Mac.getInstance(chave.getAlgorithm());
 	    mac.init(key);
 	    
-	    String message = mensagem;
-	    
-	    byte[] b = message.getBytes("UTF-8");
+//	    String message = mensagem;
+//	    
+//	    byte[] b = message.getBytes("UTF-8");
 
-	    byte[] macbytes = mac.doFinal(b);
+	    byte[] macbytes = mac.doFinal(mensagem);
 	  
 //	  System.out.println("MAC:: " );
 //	  System.out.println(macbytes);
@@ -138,7 +138,7 @@ public class RSA {
 	}
 	
 	//metodo para verificar os dois macs
-public boolean verificaMAC(String mensagem, SecretKey chave, byte[] macAntigo){
+public boolean verificaMAC(byte[] mensagem, SecretKey chave, byte[] macAntigo){
 	boolean resultado = false;
 	byte[] oldMAC = macAntigo;
 		

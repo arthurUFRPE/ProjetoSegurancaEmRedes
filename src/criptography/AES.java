@@ -23,6 +23,10 @@ public class AES{
 	private PaddedBufferedBlockCipher pbbc;
 	private KeyParameter key;
 	private byte[] keySend;
+	
+	public AES(){
+		setPadding(new PKCS7Padding());
+	}
 
 	public void setPadding(BlockCipherPadding bcp) {
 		this.pbbc = new PaddedBufferedBlockCipher(AESCipher, bcp);
@@ -75,7 +79,7 @@ public class AES{
 
 			AES abc = new AES();
 			abc.setPadding(new PKCS7Padding());
-			keySend = sk.getEncoded();
+			abc.setKeySend(sk.getEncoded());
 			abc.setKey(sk.getEncoded());
 
 			return abc;

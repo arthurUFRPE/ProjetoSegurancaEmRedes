@@ -36,7 +36,6 @@ public class TCPConnection {
     
     private TCPConnection initServer(int port) {
         manager = new CriptographyManager();
-        manager.setPrivateKey(manager.readPrivateKey());
         try {
             welcomeSocket =  new ServerSocket(port);
             System.out.println("SERVER MODE START!");
@@ -54,8 +53,6 @@ public class TCPConnection {
 
     private TCPConnection initClient(String host, int port) {
         manager = new CriptographyManager();
-        manager.setPublicKey(manager.readPublicKey());
-        manager.setPrivateKey(manager.readPrivateKey());
         try {
             connectionSocket = new Socket(host, port);
                         
@@ -110,17 +107,17 @@ class ConnectionClient implements Runnable{
         try {
             
             PrintWriter outToServer = new PrintWriter(connectionSocket.getOutputStream(), true);
-            manager.setMacKey(new RSA().geraMACkey());
-            
-            AESPackage aesPackage = new AESPackage(manager.getAes(true).getKeySend(), manager.getMacKey());
+            manager.gerarMACandAES();
+            AESPackage aesPackage = new AESPackage(manager.getAes().getKeySend(), manager.getMacKey());
+//          System.out.println("AES antes: "+Base64.encode(aesPackage.getKey()));
+//        	System.out.println("MAC antes: "+Base64.encode(aesPackage.getMackey()));
             String msg = manager.encryptToSend(aesPackage, CriptographyManager.ASYNCHRONOUS_MODE);
             
             Object o = manager.decryptToRead(msg, CriptographyManager.ASYNCHRONOUS_MODE);
             if(o instanceof AESPackage){
-            	System.out.println("AES antes: "+Base64.encode(aesPackage.getKey()));
-            	System.out.println("MAC antes: "+Base64.encode(aesPackage.getMackey()));
-            	System.out.println("AES: "+Base64.encode(((AESPackage)o).getKey()));
-            	System.out.println("MAC: "+Base64.encode(((AESPackage)o).getMackey()));
+            	
+//            	System.out.println("AES: "+Base64.encode(((AESPackage)o).getKey()));
+//            	System.out.println("MAC: "+Base64.encode(((AESPackage)o).getMackey()));
             }
             
             outToServer.println(msg);
@@ -128,10 +125,10 @@ class ConnectionClient implements Runnable{
             Mensagem mensagem = new Mensagem();
             mensagem.setCount(new Random().nextInt(1000));
             mensagem.setMensagem("VAI DE PRIMEIRA");
-            mensagem.setMacMens(manager.criptografaMAC(manager.getMacKey(), "VAI DE PRIMEIRA"));
+            //mensagem.setMacMens(manager.criptografaMAC(manager.getMacKey(), "VAI DE PRIMEIRA"));
             
             String objCrip = manager.encryptToSend(mensagem, manager.SYNCHRONOUS_MODE);
-            
+            System.out.println("Syncrono saida:"+ objCrip);
             outToServer.println(objCrip);
             
 //            while(true){
@@ -167,12 +164,16 @@ class ConnectionServer implements Runnable{
             inFromClient = new BufferedReader(new InputStreamReader(connectionSocket.getInputStream()));
             outToClient = new DataOutputStream(connectionSocket.getOutputStream());
             
-            while(manager.getAes(false) == null){
+            while(manager.getAes() == null){
                 String msg = inFromClient.readLine();
+                
                 Object obj = manager.decryptToRead(msg, CriptographyManager.ASYNCHRONOUS_MODE);
                 
                 if(obj instanceof AESPackage){
-                    manager.getAes(true).setKey(((AESPackage) obj).getKey());
+                	AES aes = new AES();
+                	aes.setKeySend(((AESPackage) obj).getKey());
+                	aes.setKey(aes.getKeySend());
+                    manager.setAes(aes);
                     manager.setMacKey(((AESPackage) obj).getMackey());
                 }
             }
