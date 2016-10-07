@@ -31,7 +31,7 @@ public class CriptographyManager {
 	public String encryptToSend(Object o, int mode){
 		
 		byte[] msg = convertTobyte(o);
-		System.out.println("Entrada:"+mode+" |"+Base64.encode(msg));
+		//System.out.println("Entrada:"+mode+" |"+Base64.encode(msg));
 		String encr = null;
 		switch (mode) {
 		case ASYNCHRONOUS_MODE:
@@ -76,7 +76,7 @@ public class CriptographyManager {
 		default:
 			return null;
 		}
-		System.out.println("Saída: "+mode+" |"+ Base64.encode(temp));
+		//System.out.println("Saída: "+mode+" |"+ Base64.encode(temp));
 		return convertFromByte(temp);
 	}
 	
