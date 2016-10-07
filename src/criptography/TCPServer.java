@@ -28,6 +28,7 @@ public class TCPServer {
             welcomeSocket =  new ServerSocket(port);
             System.out.println("SERVER MODE START!");
             connectionSocket = welcomeSocket.accept();
+            connectionSocket.setSoTimeout(0);
             
             System.out.println("Conexão iniciada!");
             new ConnectionServer(connectionSocket, manager).run();
@@ -75,7 +76,7 @@ class ConnectionServer implements Runnable{
                 	aes.setKey(aes.getKeySend());
                     manager.setAes(aes);
                     manager.setMacKey(((AESPackage) obj).getMackey());
-                    
+                    outToClient.println("OK!");
                 }
             }
                         
@@ -86,7 +87,7 @@ class ConnectionServer implements Runnable{
             	System.out.println(msg);
             	if(msg != null){
             		Mensagem mensagem = (Mensagem) manager.decryptToRead(msg, manager.SYNCHRONOUS_MODE);
-            		if(manager.verificaMAC(manager.getMacKey(), mensagem.getMensagem(), mensagem.getMacMens())){
+            		//if(manager.verificaMAC(manager.getMacKey(), mensagem.getMensagem(), mensagem.getMacMens())){
             			if(count == -1){
             				count = mensagem.getCount();
             				System.out.println("Cliente: "+mensagem.getMensagem());
@@ -95,7 +96,7 @@ class ConnectionServer implements Runnable{
             			}else{
             				System.out.println("Mensagem fora de ordem!");
             			}
-            		}
+            		//}
             	}else{
             		System.out.println("Não veio nada!");
             	}

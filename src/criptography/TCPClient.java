@@ -61,7 +61,7 @@ public class TCPClient {
 class ConnectionClient implements Runnable {
 
 	Socket connectionSocket;
-	BufferedReader inFromServer;
+	BufferedReader in;
 	CriptographyManager manager;
 
 	public ConnectionClient(Socket connectionSocket, CriptographyManager manager) {
@@ -73,17 +73,19 @@ class ConnectionClient implements Runnable {
 	@Override
 	public void run() {
 		try {
-
+			in = new BufferedReader(new InputStreamReader(connectionSocket.getInputStream()));
 			PrintWriter outToServer = new PrintWriter(connectionSocket.getOutputStream(), true);
 			manager.gerarMACandAES();
 			AESPackage aesPackage = new AESPackage(manager.getAes().getKeySend(), manager.getMacKey());
-			// System.out.println("AES antes:
-			// "+Base64.encode(aesPackage.getKey()));
-			// System.out.println("MAC antes:
-			// "+Base64.encode(aesPackage.getMackey()));
-			//System.out.println(new Gson().toJson(aesPackage));
+
 			String msg = manager.encryptToSend(aesPackage, CriptographyManager.ASYNCHRONOUS_MODE);
 			outToServer.println(msg);
+			String resposta;
+			do{
+				resposta =in.readLine(); 
+			}
+			while(resposta == null);
+			System.out.println(resposta);
 			
 			Mensagem mensagem = new Mensagem();
 			mensagem.setCount(new Random().nextInt(1000));
@@ -95,9 +97,6 @@ class ConnectionClient implements Runnable {
 			System.out.println("ENVIANDO: "+ objCrip);
 			outToServer.println(objCrip);
 
-			// while(true){
-			// //Ler Mensagens AQUI!!
-			// }
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
